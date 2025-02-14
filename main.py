@@ -43,7 +43,7 @@ if st.button("Analyze Sentiment"):
             vader_sentiment = "Negative 😞"
         else:
             vader_sentiment = "Neutral 😐"
-        st.write(f"**VADER:** {vader_sentiment} (Score: {vader_scores['compound']:.2f})")
+        st.write(f"**VADER:** {vader_sentiment}")
 
         # Naïve Bayes Model
         text_vectorized = tfidf.transform([user_input])
@@ -73,7 +73,7 @@ if st.button("Analyze Sentiment"):
         else:
             lstm_sentiment = "Neutral 😐"
 
-        st.write(f"**LSTM:** {lstm_sentiment} (Score: {lstm_prediction[0]:.2f})")
+        st.write(f"**LSTM:** {lstm_sentiment}")
 
 
 
