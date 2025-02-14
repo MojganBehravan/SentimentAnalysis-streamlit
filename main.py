@@ -3,7 +3,6 @@ import joblib
 import time
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
-from transformers import TFAutoModelForSequenceClassification, AutoTokenizer
 import tensorflow as tf
 
 # Load models and vectorizers
@@ -18,10 +17,7 @@ sia = SentimentIntensityAnalyzer()
 lstm_model = tf.keras.models.load_model('models/lstm_model-Resampling.h5')
 lstm_tokenizer = joblib.load('models/tokenizer-Resampling.pkl')
 
-# Load BERT sentiment analysis pipeline
-bert_model_name = "cardiffnlp/twitter-roberta-base-sentiment-latest"
-bert_tokenizer = AutoTokenizer.from_pretrained(bert_model_name)
-bert_model = TFAutoModelForSequenceClassification.from_pretrained(bert_model_name)
+
 
 # Sentiment Mapping
 SENTIMENT_LABELS = {0: "Negative 😞", 1: "Neutral 😐", 2: "Positive 😊"}
@@ -68,24 +64,8 @@ if st.button("Analyze Sentiment"):
 
         st.write(f"**LSTM:** {lstm_sentiment} (Score: {lstm_prediction[0]:.2f})")
 
-        # BERT Model
-        def bert_predict(text):
-            inputs = bert_tokenizer(text, return_tensors="tf", padding=True, truncation=True, max_length=512)
-            outputs = bert_model(inputs)
-            predictions = tf.nn.softmax(outputs.logits, axis=-1).numpy()[0]
 
-            # Binary classification threshold
-            if predictions[1] > 0.65:
-                sentiment = "Positive 😊"
-            elif predictions[0] > 0.65:
-                sentiment = "Negative 😞"
-            else:
-                sentiment = "Neutral 😐"
 
-            return sentiment, predictions
-
-        bert_sentiment = bert_predict(user_input)
-        st.write(f"**BERT:** {bert_sentiment}")
 
     else:
         st.warning("Please enter text to analyze.")
