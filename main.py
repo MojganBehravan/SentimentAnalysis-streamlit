@@ -17,8 +17,9 @@ sia = SentimentIntensityAnalyzer()
 lstm_model = tf.keras.models.load_model('models/lstm_model-Resampling.h5')
 lstm_tokenizer = joblib.load('models/tokenizer-Resampling.pkl')
 
-
-
+# Load XGBoost Model
+xgb_model = joblib.load('models/xgboost_sentiment_model_tune.pkl')
+tfidf_vectorizer_xgb = joblib.load("models/xgboost_tfidf_vectorizer_tune.pkl")
 # Sentiment Mapping
 SENTIMENT_LABELS = {0: "Negative 😞", 1: "Neutral 😐", 2: "Positive 😊"}
 
@@ -34,12 +35,6 @@ if st.button("Analyze Sentiment"):
     if user_input:
         st.write("### Results from Different Models:")
 
-        # Naïve Bayes Model
-        text_vectorized = tfidf.transform([user_input])
-        nb_prediction = nb_model.predict(text_vectorized)[0]  # Ensure output is an integer label
-        nb_sentiment = SENTIMENT_LABELS.get(nb_prediction, "Unknown")
-        st.write(f"**Naïve Bayes:** {nb_sentiment}")
-
         # VADER Model
         vader_scores = sia.polarity_scores(user_input)
         if vader_scores['compound'] >= 0.05:
@@ -49,6 +44,22 @@ if st.button("Analyze Sentiment"):
         else:
             vader_sentiment = "Neutral 😐"
         st.write(f"**VADER:** {vader_sentiment} (Score: {vader_scores['compound']:.2f})")
+
+        # Naïve Bayes Model
+        text_vectorized = tfidf.transform([user_input])
+        nb_prediction = nb_model.predict(text_vectorized)[0]  # Ensure output is an integer label
+        nb_sentiment = SENTIMENT_LABELS.get(nb_prediction, "Unknown")
+        st.write(f"**Naïve Bayes:** {nb_sentiment}")
+
+        ### **XGBoost Model**
+        text_vectorized_xgb = tfidf_vectorizer_xgb.transform([user_input])
+        if text_vectorized_xgb.shape[1] != xgb_model.n_features_in_:
+            raise ValueError(
+                f"Feature shape mismatch: expected {xgb_model.n_features_in_}, got {text_vectorized_xgb.shape[1]}"
+            )
+        xgb_prediction = xgb_model.predict(text_vectorized_xgb)[0]
+        xgb_sentiment = SENTIMENT_LABELS.get(xgb_prediction, "Unknown")
+        st.write(f"**XGBoost:** {xgb_sentiment}")
 
         # LSTM Model
         lstm_sequence = lstm_tokenizer.texts_to_sequences([user_input])
